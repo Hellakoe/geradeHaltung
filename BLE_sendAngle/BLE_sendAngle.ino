@@ -10,12 +10,19 @@
 #include <BLE2902.h>
 #include <Wire.h>
 
-XXX
-
 BLECharacteristic *pCharacteristic;
 bool deviceConnected = false; 
 int txValue = 0; 
-
+const int MPU = 0x68;
+boolean value = LOW;
+unsigned long previousMillis = 0;
+unsigned long interval = 1000;
+int16_t AcX, AcY, AcZ, Tmp, GyX, GyY, GyZ = 0;
+float gz_null = 0;
+float angle = 0; 
+int16_t GyZold, GyZdiff = 0;
+float t1, t2 = 0;
+unsigned long prev;
 
 // See the following for generating UUIDs:
 // https://www.uuidgenerator.net/
@@ -35,9 +42,6 @@ class MyServerCallbacks: public BLEServerCallbacks
     deviceConnected = false; 
   }
 };
-
-int16_t AcX;
-const int MPU=0x68; 
 
 
 void setup() {
@@ -73,7 +77,26 @@ void setup() {
 
   //Start advertising
   pServer->getAdvertising()->start();
-  
+
+   for (int i=0;i<500;i++) //mittelung von nullpunkt
+    {
+      while (GyZdiff > 1)
+      {
+      GyZold=GyZ;
+      AcX = Wire.read() << 8 | Wire.read();
+      AcY = Wire.read() << 8 | Wire.read();
+      AcZ = Wire.read() << 8 | Wire.read();
+      GyX = Wire.read() << 8 | Wire.read();
+      GyY = Wire.read() << 8 | Wire.read();
+      GyZ = Wire.read() << 8 | Wire.read();  
+      GyZ = GyZ/131;
+      GyZdiff= GyZ-GyZold;
+      }
+          
+      gz_null = gz_null+GyZ;
+    }
+    gz_null = gz_null/500;
+    prev = millis();
  
 }
 
@@ -83,12 +106,30 @@ void loop() {
   Wire.endTransmission(false);
   Wire.requestFrom(MPU, 12, true);
   
+GyZold=GyZ,
+  t1=t2; 
+
   AcX = Wire.read() << 8 | Wire.read();
-  AcX=AcX/16;
+  AcY = Wire.read() << 8 | Wire.read();
+  AcZ = Wire.read() << 8 | Wire.read();
+  GyX = Wire.read() << 8 | Wire.read();
+  GyY = Wire.read() << 8 | Wire.read();
+  GyZ = Wire.read() << 8 | Wire.read();
+  t2  = millis();
+  t2=t2/1000;
+  
+GyZ= GyZ-gz_null;
+GyZ=GyZ/131;
+GyZ=GyZ+1; 
+//GyZ in Winkelgeschwindigkeit deg/sec 
+ 
+//Winkel berechnen 
+//angle=angle+GyZ*(t2-t1)*(GyZold+GyZ);
+angle=angle+GyZ*(t2-t1);
 
 if (deviceConnected)
 {
-  txValue= AcX; 
+  txValue= angle; 
 
   //Conversion of txValue
   char txString[16];
@@ -100,7 +141,7 @@ if (deviceConnected)
   //Notifying the connected client 
   pCharacteristic->notify();
   Serial.println("Sent value:" + String(txString));
-  delay(500);
+  //delay(500);
 }
 
 }
