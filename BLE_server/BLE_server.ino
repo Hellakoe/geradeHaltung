@@ -10,7 +10,6 @@
 #include <BLE2902.h>
 #include <Wire.h>
 
-HALLO 
 
 BLECharacteristic *pCharacteristic;
 bool deviceConnected = false; 
