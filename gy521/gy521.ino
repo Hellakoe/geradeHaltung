@@ -7,10 +7,10 @@ const int MPU = 0x68;
 boolean value = LOW;
 unsigned long previousMillis = 0;
 unsigned long interval = 1000;
-int16_t AcX, AcY, AcZ, Tmp, GyX, GyY, GyZ = 0;
+int16_t AcX, AcX1, AcY, AcZ, Tmp, GyX, GyY, GyZ = 0;
 float gz_null = 0;
 float angle = 0; 
-int16_t GyZold, GyZdiff = 0;
+int16_t GyZold, GyZdiff = 4;
 float t1, t2 = 0;
 unsigned long prev;
 
@@ -29,7 +29,7 @@ void setup() {
       while (GyZdiff > 1)
       {
       GyZold=GyZ;
-      AcX = Wire.read() << 8 | Wire.read();
+      AcX1 = Wire.read() << 8 | Wire.read();
       AcY = Wire.read() << 8 | Wire.read();
       AcZ = Wire.read() << 8 | Wire.read();
       GyX = Wire.read() << 8 | Wire.read();
@@ -54,12 +54,12 @@ void loop() {
   GyZold=GyZ,
   t1=t2; 
 
-  /*AcX = Wire.read() << 8 | Wire.read();
+  AcX = Wire.read() << 8 | Wire.read();
   AcY = Wire.read() << 8 | Wire.read();
   AcZ = Wire.read() << 8 | Wire.read();
   GyX = Wire.read() << 8 | Wire.read();
-  GyY = Wire.read() << 8 | Wire.read();*/
-  GyZ = Wire.read() << 40 | Wire.read();
+  GyY = Wire.read() << 8 | Wire.read();
+  GyZ = Wire.read() << 8 | Wire.read();
   t2  = millis();
   t2=t2/1000;
   
@@ -77,7 +77,7 @@ angle=angle+GyZ*(t2-t1);
     prev =millis();
     
       Serial.print("Gyro: ");
-      Serial.print("GyZ = "); Serial.print(GyZ);
+      Serial.print("AcX1 = "); Serial.print(AcX1);
       Serial.print(" | GyZold = "); Serial.print(GyZold);
       Serial.print(" | t2 = "); Serial.print(t2);
       Serial.print(" | t1 = "); Serial.print(t1);
