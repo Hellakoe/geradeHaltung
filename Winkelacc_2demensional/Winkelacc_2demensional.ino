@@ -15,14 +15,13 @@ int16_t AcZdiff;
 int16_t GyX, GyY, GyZ;
 float AcXCal, AcYCal, AcZCal = 0;
 float AcX_null, AcY_null, AcZ_null;
-int b = 0;
+
 
 float Bet_null;
 float Bet_Ac;
 float Skalar;
 float angle = 0;
 
-float t1, t2 = 0;
 unsigned long prev;
 
 void setup() {
@@ -70,9 +69,6 @@ void loop() {
   Wire.write(0x3B);
   Wire.endTransmission(false);
   Wire.requestFrom(MPU, 12, true);
-
-
-
 
   AcX = Wire.read() << 8 | Wire.read();
   AcY = Wire.read() << 8 | Wire.read();
